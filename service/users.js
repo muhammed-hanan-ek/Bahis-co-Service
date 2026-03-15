@@ -1,11 +1,11 @@
-module.exports = function (app, connection) {
+module.exports = function (app, connection,upload) {
   // Get the packages we need //
 
   var sql = require("mssql"); //adding mssql driver into this file.
 
   var config = require("../config").config;
   const multer = require("multer");
-  const upload = multer();
+ 
   var jwt = require("jsonwebtoken"); // used to create, sign, and verify tokens
   var configauth = require("../config");
   app.set("superSecret", configauth.secret);
@@ -59,8 +59,8 @@ module.exports = function (app, connection) {
       .then((pool) => {
         return pool
           .request()
-          // .input("LogID", sql.Int, req.LogID)
-          .input("LogID", sql.Int, 1)
+          .input("LogID", sql.Int, req.LogID)
+          // .input("LogID", sql.Int, 1)
           .execute("PROCGetUsers");
       })
       .then((result) => {
@@ -83,14 +83,24 @@ module.exports = function (app, connection) {
       });
   });
 
-  app.post("/user/add", upload.none(), function (req, res) {
-    console.log(req.LogID);
+  app.post("/user/add", upload.single('File'), function (req, res) {
+    console.log(req.body);
     var username = req.body.username;
     var Fullname = req.body.Fullname;
     var password = req.body.password;
     var role = req.body.role;
     var email = req.body.email;
-
+      if(req.body.userID!='null'){
+    var userID = req.body.userID;
+    }else{
+      var userID=null;
+    }
+    var img = req.file.filename;
+    
+    console.log(req.file);
+    
+ 
+ 
     connection
       .then((pool) => {
         return pool
@@ -100,6 +110,8 @@ module.exports = function (app, connection) {
           .input("USR_ROLE", sql.Int, role)
           .input("USR_EMAIL", sql.NVarChar(100), email)
           .input("Fullname", sql.NVarChar(100), Fullname)
+          .input("userID", sql.NVarChar(100), userID)
+          .input("img", sql.NVarChar(300), img)
           .execute("procSaveUser");
       })
       .then((result) => {
@@ -110,11 +122,109 @@ module.exports = function (app, connection) {
       })
       .catch((err) => {
         console.log("SQL Error:", err);
-
+ 
         res.status(500).json({
           result: "failed",
           error: err.message,
         });
       });
   });
+ 
+ 
+
+
+   app.post("/user/loadMenu", function (req, res) {
+    // console.log(req.LogID);
+    connection
+      .then((pool) => {
+        return pool
+          .request()
+          // .input("LogID", sql.Int, req.LogID)
+          .input("user", sql.Int, req.LogID)
+          .execute("sp_LoadMenu");
+      })
+      .then((result) => {
+        if (result.recordset.length === 0) {
+          res.json({ result: "failed" });
+        } else {
+          res.json({
+            result: "success",
+            data: result.recordsets,
+          });
+        }
+      })
+      .catch((err) => {
+        console.log("SQL Error:", err);
+ 
+        res.status(500).json({
+          result: "failed",
+          error: err.message,
+        });
+      });
+  });
+
+
+
+     app.post("/user/Load", upload.none(), function (req, res) {
+      console.log(req.body);
+      if(req.body.UserId!='null'){
+    var UserId = req.body.UserId;
+    }else{
+      var UserId=null;
+    }
+    connection
+      .then((pool) => {
+        return pool
+          .request()
+          .input("UserId", sql.Int, UserId)
+          .execute("sp_LoadEditUser");
+      })
+      .then((result) => {
+         
+          res.json({
+            result: "success",
+            data: result.recordsets,
+          });
+        
+      })
+      .catch((err) => {
+        console.log("SQL Error:", err);
+ 
+        res.status(500).json({
+          result: "failed",
+          error: err.message,
+        });
+      });
+  });
+
+
+     app.post("/user/Delete", upload.none(),function (req, res) {
+    var UserId = req.body.UserId;
+    connection
+      .then((pool) => {
+        return pool
+          .request()
+          // .input("LogID", sql.Int, req.LogID)
+          .input("UserId", sql.Int, UserId)
+          .execute("sp_DeleteUser");
+      })
+      .then((result) => {
+        
+          res.json({
+            result: "success",
+            data: result.recordset,
+          });
+        
+      })
+      .catch((err) => {
+        console.log("SQL Error:", err);
+ 
+        res.status(500).json({
+          result: "failed",
+          error: err.message,
+        });
+      });
+  });
+ 
+ 
 };

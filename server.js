@@ -4,17 +4,31 @@ const app = express();
 const port = 3000;
 var sql = require("mssql");
 var multer = require("multer");
+ const path = require('path');
 
 var jwt = require("jsonwebtoken"); // used to create, sign, and verify tokens
 app.use(cors())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+const storage = multer.diskStorage({
+  destination: "./uploads/",
+  filename: function (req, file, cb) {
+
+    const ext = path.extname(file.originalname); // .png .jpg .jpeg
+    const filename = Date.now() + ext;
+
+    cb(null, filename);
+  }
+});
+
+const upload = multer({ storage: storage }); 
+app.use("/uploads", express.static(__dirname + "/uploads"));
 var config = require("./config").config;
-
+ 
 const allowedUrls = ["/user/login"];
-
+ 
 const regexPatterns = [/uploads/];
-
+ 
 const connection = new sql.ConnectionPool(config)
   .connect()
   .then((pool) => {
@@ -24,25 +38,18 @@ const connection = new sql.ConnectionPool(config)
   .catch((err) => {
     console.error("Database Connection Failed:", err);
   });
-require("./service/users")(app, connection);
-require("./service/work")(app, connection);
-require("./service/sales")(app, connection);
-
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
-});
-
+ 
 app.use(function (req, res, next) {
-  var token = req.headers.authorization;
+    var token = req.headers.authorization;
   // Website you wish to allow to connect
   res.setHeader("Access-Control-Allow-Origin", "*");
-
+ 
   // Request methods you wish to allow
   res.setHeader(
     "Access-Control-Allow-Methods",
     "GET, POST, OPTIONS, PUT, PATCH, DELETE",
   );
-
+ 
   // Request headers you wish to allow
   res.setHeader(
     "Access-Control-Allow-Headers",
@@ -52,10 +59,11 @@ app.use(function (req, res, next) {
   // to the API (e.g. in case you use sessions)
   res.setHeader("Access-Control-Allow-Credentials", true);
   // decode token
-
+ 
   if (token || token != undefined) {
     // verifies secret and checks exp
     jwt.verify(token, app.get("superSecret"), function (err, decoded) {
+      
       if (err) {
         return res.json({
           result: "Unauthorized",
@@ -86,13 +94,9 @@ app.use(function (req, res, next) {
     ) {
       // console.log('url ---',req.url);
       next();
-    } else if (req.headers.mobileFlag == 1) {
-      next();
-    } else if (req.headers.chatbot == 1) {
-      next();
+    
     } else {
-      // console.log(123);
-
+ 
       return res.json({
         result: "Unauthorized",
         success: false,
@@ -101,3 +105,13 @@ app.use(function (req, res, next) {
     }
   }
 });
+require("./service/users")(app, connection,upload);
+require("./service/work")(app, connection);
+require("./service/sales")(app, connection);
+ 
+ 
+ 
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`);
+});
+ 
