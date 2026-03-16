@@ -16,18 +16,21 @@ module.exports = function (app, connection) {
     var description = req.body.desc;
     var link = req.body.link;
     var LogId = req.LogID;
-    console.log(LogId);
-
+    var slno = (!req.body.slno || req.body.slno === 'null') ? null : req.body.slno;
+ 
+ 
     connection
       .then((pool) => {
         return pool
           .request()
           .input("title", sql.NVarChar(200), title)
-          .input("driveLink", sql.NVarChar(300), link)
+          .input("link", sql.NVarChar(300), link)
           .input("description", sql.NVarChar(300), description)
           .input("client", sql.Int, client)
           .input("user", sql.Int, LogId)
-
+          .input("slno", sql.Int, slno)
+ 
+ 
           .execute("procSaveWork");
       })
       .then((result) => {
@@ -38,13 +41,14 @@ module.exports = function (app, connection) {
       })
       .catch((err) => {
         console.log("SQL Error:", err);
-
+ 
         res.status(500).json({
           result: "failed",
           error: err.message,
         });
       });
   });
+ 
 
   app.post("/work/List", upload.none(), function (req, res) {
     var LogId = req.LogID;
@@ -62,6 +66,37 @@ module.exports = function (app, connection) {
         res.json({
           result: "success",
           data: result.recordset,
+        });
+      })
+      .catch((err) => {
+        console.log("SQL Error:", err);
+
+        res.status(500).json({
+          result: "failed",
+          error: err.message,
+        });
+      });
+  });
+
+  app.post("/work/load", upload.none(), function (req, res) {
+    if (req.body.slno != "null") {
+      var slno = req.body.slno;
+    } else {
+      var slno = null;
+    }
+
+    connection
+      .then((pool) => {
+        return pool
+          .request()
+          .input("slno", sql.Int, slno)
+
+          .execute("sp_WorkbyId");
+      })
+      .then((result) => {
+        res.json({
+          result: "success",
+          data: result.recordsets,
         });
       })
       .catch((err) => {
