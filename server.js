@@ -108,6 +108,7 @@ app.use(function (req, res, next) {
 require("./service/users")(app, connection,upload);
 require("./service/work")(app, connection);
 require("./service/sales")(app, connection);
+require("./service/ads")(app, connection);
  
  
  

@@ -108,4 +108,64 @@ module.exports = function (app, connection) {
         });
       });
   });
+
+   app.post("/work/Delete", upload.none(),function (req, res) {
+    var workId = req.body.workId;
+    connection
+      .then((pool) => {
+        return pool
+          .request()
+          .input("LogID", sql.Int, req.LogID)
+          .input("WORKID", sql.Int, workId)
+          .execute("sp_DeleteWork");
+      })
+      .then((result) => {
+        
+          res.json({
+            result: "success",
+            data: result.recordset,
+          });
+        
+      })
+      .catch((err) => {
+        console.log("SQL Error:", err);
+ 
+        res.status(500).json({
+          result: "failed",
+          error: err.message,
+        });
+      });
+  });
+
+   app.post("/work/ApproveOrReject", upload.none(),function (req, res) {
+    var workId = req.body.workId;
+    var DESICION = req.body.DESICION;
+    connection
+      .then((pool) => {
+        return pool
+          .request()
+          .input("LogID", sql.Int, req.LogID)
+          .input("WORKID", sql.Int, workId)
+          .input("DESICION", sql.Int, DESICION)
+          .execute("SP_APPROVE_OR_REJECT");
+      })
+      .then((result) => {
+        
+          res.json({
+            result: "success",
+            data: result.recordset,
+          });
+        
+      })
+      .catch((err) => {
+        console.log("SQL Error:", err);
+ 
+        res.status(500).json({
+          result: "failed",
+          error: err.message,
+        });
+      });
+  });
+
+  
 };
