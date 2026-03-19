@@ -15,7 +15,7 @@ module.exports = function (app, connection) {
     var SLNO = (!req.body.SLNO || req.body.SLNO === 'null') ? null : req.body.SLNO;
     var count = req.body.count;
     var amount = req.body.amount;
-    var LOGID = req.LogId;
+    var LOGID = req.LogID;
     console.log(LOGID);
 
     connection
@@ -74,9 +74,9 @@ module.exports = function (app, connection) {
   });
 
   app.post("/sales/Load", upload.none(), function (req, res) {
-    var SLNO = req.body.SLNO;
-    var LOGID = req.LogId;
-    console.log(LogId);
+    var SLNO = (!req.body.SLNO || req.body.SLNO === 'null') ? null : req.body.SLNO;
+    var LOGID = req.LogID;
+    console.log(LOGID);
 
     connection
       .then((pool) => {
@@ -85,17 +85,45 @@ module.exports = function (app, connection) {
           .input("SLNO", sql.Int, SLNO)
           .input("LOGID", sql.Int, LOGID)
 
-          .execute("PROCSalesList");
+          .execute("CONVERSION_BY_ID");
       })
       .then((result) => {
         res.json({
           result: "success",
-          data: result.recordset,
+          data: result.recordsets,
         });
       })
       .catch((err) => {
         console.log("SQL Error:", err);
 
+        res.status(500).json({
+          result: "failed",
+          error: err.message,
+        });
+      });
+  });
+
+  app.post("/sales/Delete", upload.none(),function (req, res) {
+    var SLNO = req.body.slno;
+    connection
+      .then((pool) => {
+        return pool
+          .request()
+          // .input("LogID", sql.Int, req.LogID)
+          .input("slno", sql.Int, SLNO)
+          .execute("deleteConvesrion");
+      })
+      .then((result) => {
+        
+          res.json({
+            result: "success",
+            data: result.recordset,
+          });
+        
+      })
+      .catch((err) => {
+        console.log("SQL Error:", err);
+ 
         res.status(500).json({
           result: "failed",
           error: err.message,

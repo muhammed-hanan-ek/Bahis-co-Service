@@ -23,7 +23,7 @@ module.exports = function (app, connection) {
           .request()
           .input("slno", sql.Int, slno)
 
-          .execute("CONVERSION_BY_ID");
+          .execute("sp_AdbyId");
       })
       .then((result) => {
         res.json({
@@ -47,7 +47,7 @@ module.exports = function (app, connection) {
     var startDate=req.body.startDate;
     var endDate=req.body.endDate;
     var amount=req.body.amount;
-    var LogId=req.LogId;
+    var LogId=req.LogID;
 
     connection
       .then((pool) => {
