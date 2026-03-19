@@ -23,7 +23,7 @@ module.exports = function (app, connection) {
           .request()
           .input("slno", sql.Int, slno)
 
-          .execute("sp_AdbyId");
+          .execute("CONVERSION_BY_ID");
       })
       .then((result) => {
         res.json({
@@ -79,4 +79,73 @@ module.exports = function (app, connection) {
         });
       });
   })
+
+
+      app.post("/ad/List", upload.none(), function (req, res) {
+    var LogId = req.LogID;
+   console.log(req.body);
+   
+    var Client = JSON.parse(req.body?.Client);
+    var date = req.body.date;
+ 
+    var tvpClient = new sql.Table();
+        tvpClient.columns.add("ID", sql.Int);
+
+    if (Array.isArray(Client)) {
+        Client.forEach(client => tvpClient.rows.add(client));
+      }
+
+ 
+    connection
+      .then((pool) => {
+        return pool
+          .request()
+          .input("LogID", sql.Int, LogId)
+          .input("Client", tvpClient)
+          .input("date", sql.NVarChar(10), date)
+          .execute("PROCAdList");
+      })
+      .then((result) => {
+        res.json({
+          result: "success",
+          data: result.recordsets,
+        });
+      })
+      .catch((err) => {
+        console.log("SQL Error:", err);
+ 
+        res.status(500).json({
+          result: "failed",
+          error: err.message,
+        });
+      });
+  });
+
+     app.post("/ad/Delete", upload.none(),function (req, res) {
+    var SLNO = req.body.SLNO;
+    connection
+      .then((pool) => {
+        return pool
+          .request()
+          // .input("LogID", sql.Int, req.LogID)
+          .input("SLNO", sql.Int, SLNO)
+          .execute("DELETEAD");
+      })
+      .then((result) => {
+        
+          res.json({
+            result: "success",
+            data: result.recordset,
+          });
+        
+      })
+      .catch((err) => {
+        console.log("SQL Error:", err);
+ 
+        res.status(500).json({
+          result: "failed",
+          error: err.message,
+        });
+      });
+  });
 }

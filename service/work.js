@@ -50,33 +50,64 @@ module.exports = function (app, connection) {
   });
  
 
-  app.post("/work/List", upload.none(), function (req, res) {
+    app.post("/work/List", upload.none(), function (req, res) {
     var LogId = req.LogID;
-    console.log(LogId);
-
+   console.log(req.body);
+   
+    var Client = JSON.parse(req.body?.Client);
+    var Status = JSON.parse( req.body?.status);
+    var emplist = JSON.parse(req.body?.emplist);
+ 
+    var date = req.body.date;
+ 
+    var tvpClient = new sql.Table();
+        tvpClient.columns.add("ID", sql.Int);
+    var tvpStatus = new sql.Table();
+        tvpStatus.columns.add("ID", sql.Int);
+    var tvpEmp = new sql.Table();
+        tvpEmp.columns.add("ID", sql.Int);
+    if (Array.isArray(Client)) {
+        Client.forEach(client => tvpClient.rows.add(client));
+      }
+   
+    if (Array.isArray(Status)) {
+        Status.forEach(status => {if(status==2){status=null}tvpStatus.rows.add(status)});
+      }
+    if (Array.isArray(emplist)) {
+        emplist.forEach(emp => tvpEmp.rows.add(emp));
+      }
+ 
     connection
       .then((pool) => {
         return pool
           .request()
           .input("LogID", sql.Int, LogId)
-
+          .input("Client", tvpClient)
+          .input("status",tvpStatus)
+          .input("emplist",tvpEmp)
+ 
+          .input("date", sql.NVarChar(10), date)
+ 
+ 
+ 
           .execute("PROCWorkList");
       })
       .then((result) => {
         res.json({
           result: "success",
-          data: result.recordset,
+          data: result.recordsets,
         });
       })
       .catch((err) => {
         console.log("SQL Error:", err);
-
+ 
         res.status(500).json({
           result: "failed",
           error: err.message,
         });
       });
   });
+ 
 
   app.post("/work/load", upload.none(), function (req, res) {
     if (req.body.slno != "null") {
