@@ -226,5 +226,91 @@ module.exports = function (app, connection,upload) {
       });
   });
  
+  app.post("/AdminDashboard", upload.none(), function (req, res) {
+    connection
+      .then((pool) => {
+        return pool
+          .request()
+           
+          .execute("SP_Admin_Dashboard");
+      })
+      .then((result) => {
+ 
+          console.log(result.recordsets);
+ 
+          res.json({
+            result: "success",
+            data: result.recordsets,
+          });
+       
+      })
+      .catch((err) => {
+        console.log("SQL Error:", err);
+ 
+        res.status(500).json({
+          result: "failed",
+          error: err.message,
+        });
+      });
+  });
+ 
+    app.post("/ClientDashboard", upload.none(), function (req, res) {
+    connection
+      .then((pool) => {
+        return pool
+          .request()
+          .input("userid", sql.Int, req.LogID)
+ 
+          .execute("sp_ClientDashboard");
+      })
+      .then((result) => {
+ 
+          console.log(result.recordsets);
+ 
+          res.json({
+            result: "success",
+            data: result.recordsets,
+          });
+       
+      })
+      .catch((err) => {
+        console.log("SQL Error:", err);
+ 
+        res.status(500).json({
+          result: "failed",
+          error: err.message,
+        });
+      });
+  });
+
+   app.post("/StaffDashboard", upload.none(), function (req, res) {
+    connection
+      .then((pool) => {
+        return pool
+          .request()
+          .input("userid", sql.Int, req.LogID)
+ 
+          .execute("sp_StaffDashboard");
+      })
+      .then((result) => {
+ 
+          console.log(result.recordsets);
+ 
+          res.json({
+            result: "success",
+            data: result.recordsets,
+          });
+       
+      })
+      .catch((err) => {
+        console.log("SQL Error:", err);
+ 
+        res.status(500).json({
+          result: "failed",
+          error: err.message,
+        });
+      });
+  });
+ 
  
 };

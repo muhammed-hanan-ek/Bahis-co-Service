@@ -47,6 +47,8 @@ module.exports = function (app, connection) {
     var startDate=req.body.startDate;
     var endDate=req.body.endDate;
     var amount=req.body.amount;
+    var client=req.body.client;
+    var link=req.body.link;
     var LogId=req.LogID;
 
     connection
@@ -54,10 +56,12 @@ module.exports = function (app, connection) {
         return pool
           .request()
           .input("slno", sql.Int, slno)
-          .input("ad", sql.Int, ad)
+          .input("ad", sql.NVarChar(sql.MAX), ad)
           .input("startDate", sql.NVarChar(100), startDate)
           .input("endDate", sql.NVarChar(100), endDate)
           .input("amount", sql.NVarChar(sql.MAX), amount)
+          .input("client", sql.Int, client)
+          .input("link", sql.NVarChar(sql.MAX), link)
           .input("LogId", sql.Int, LogId)
           
           .execute("SP_SAVE_AD");
