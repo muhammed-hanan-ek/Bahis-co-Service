@@ -83,22 +83,15 @@ module.exports = function (app, connection,upload) {
       });
   });
 
-  app.post("/user/add", upload.single('File'), function (req, res) {
-    console.log(req.body);
+   app.post("/user/add", upload.single('File'), function (req, res) {
     var username = req.body.username;
     var Fullname = req.body.Fullname;
     var password = req.body.password;
     var role = req.body.role;
     var email = req.body.email;
-      if(req.body.userID!='null'){
-    var userID = req.body.userID;
-    }else{
-      var userID=null;
-    }
-    var img = req.file.filename;
-    
-    console.log(req.file);
-    
+    var userID = req.body.userID && req.body.userID !== 'null' ? req.body.userID : null;
+    var img = req.file ? req.file.filename : null;    
+   
  
  
     connection
@@ -129,6 +122,7 @@ module.exports = function (app, connection,upload) {
         });
       });
   });
+ 
  
  
 
@@ -311,6 +305,93 @@ module.exports = function (app, connection,upload) {
         });
       });
   });
+
+
+    app.post("/user/notifications", upload.none(),function (req, res) {
+    var LogID = req.LogID;
+    connection
+      .then((pool) => {
+        return pool
+          .request()
+          .input("LogID", sql.Int, req.LogID)
+          .execute("SP_NOTIFICATIONS");
+      })
+      .then((result) => {
+       
+          res.json({
+            result: "success",
+            data: result.recordset,
+          });
+       
+      })
+      .catch((err) => {
+        console.log("SQL Error:", err);
+ 
+        res.status(500).json({
+          result: "failed",
+          error: err.message,
+        });
+      });
+  });
+
+    app.post("/user/notificationMarkAsRead", upload.none(),function (req, res) {
+    var LogID = req.LogID;
+    var type=req.body.type
+    connection
+      .then((pool) => {
+        return pool
+          .request()
+          .input("LogID", sql.Int, req.LogID)
+          .input("type", sql.NVarChar(sql.MAX), type)
+          .input("mode", sql.Int, 1)
+          .execute("sp_notification_mark_as_read");
+      })
+      .then((result) => {
+       
+          res.json({
+            result: "success",
+            data: result.recordset,
+          });
+       
+      })
+      .catch((err) => {
+        console.log("SQL Error:", err);
+ 
+        res.status(500).json({
+          result: "failed",
+          error: err.message,
+        });
+      });
+  });
+
+    app.post("/user/notificationMarkALLAsRead", upload.none(),function (req, res) {
+    var LogID = req.LogID;
+    connection
+      .then((pool) => {
+        return pool
+          .request()
+          .input("LogID", sql.Int, req.LogID)
+          .input("mode", sql.Int, 2)
+          .execute("sp_notification_mark_as_read");
+      })
+      .then((result) => {
+       
+          res.json({
+            result: "success",
+            data: result.recordset,
+          });
+       
+      })
+      .catch((err) => {
+        console.log("SQL Error:", err);
+ 
+        res.status(500).json({
+          result: "failed",
+          error: err.message,
+        });
+      });
+  });
+ 
  
  
 };
