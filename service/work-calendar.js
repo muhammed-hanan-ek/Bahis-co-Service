@@ -24,7 +24,10 @@ module.exports = function (app, connection) {
 
   const printer = new PdfPrinter(fonts);
 
-      app.post("/work_calendar/load", upload.none(), function (req, res) {
+  app.post("/work_calendar/load", upload.none(), function (req, res) {
+
+    console.log(req.body,'calendar open body');
+    
     if (req.body.slno != "null") {
       var slno = req.body.slno;
     } else {
@@ -55,22 +58,18 @@ module.exports = function (app, connection) {
         });
       });
   });
- 
 
-      app.post("/work_calendar/add", upload.none(), function (req, res) {
-
-        console.log(req.body);
-        
+  app.post("/work_calendar/add", upload.none(), function (req, res) {
     if (req.body.slno != "null") {
       var slno = req.body.slno;
     } else {
       var slno = null;
     }
-    var LogId = req.LogID
-    var title=req.body.title
-    var content=req.body.content
-    var date=req.body.date
-    var client=req.body.client
+    var LogId = req.LogID;
+    var title = req.body.title;
+    var content = req.body.content;
+    var date = req.body.date;
+    var client = req.body.client;
 
     connection
       .then((pool) => {
@@ -102,4 +101,52 @@ module.exports = function (app, connection) {
       });
   });
 
-}
+  app.post("/work_calendar/list", upload.none(), function (req, res) {
+    var LogId = req.LogID;
+    var Client = JSON.parse(req.body?.Client);
+    var Status = JSON.parse(req.body?.status);
+    var date = req.body.date;
+
+    var tvpClient = new sql.Table();
+    tvpClient.columns.add("ID", sql.Int);
+    var tvpStatus = new sql.Table();
+    tvpStatus.columns.add("ID", sql.Int);
+
+    if (Array.isArray(Client)) {
+      Client.forEach((client) => tvpClient.rows.add(client));
+    }
+
+    if (Array.isArray(Status)) {
+      Status.forEach((status) => {
+        tvpStatus.rows.add(status);
+      });
+    }
+
+    connection
+      .then((pool) => {
+        return pool
+          .request()
+          .input("mode", sql.Int, 3)
+          .input("LogID", sql.Int, LogId)
+          .input("clientFilter", tvpClient)
+          .input("statusFilter", tvpStatus)
+          .input("date", sql.NVarChar(50), date)
+
+          .execute("Proc_Work_calendar");
+      })
+      .then((result) => {
+        res.json({
+          result: "success",
+          data: result.recordsets,
+        });
+      })
+      .catch((err) => {
+        console.log("SQL Error:", err);
+
+        res.status(500).json({
+          result: "failed",
+          error: err.message,
+        });
+      });
+  });
+};

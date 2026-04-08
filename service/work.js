@@ -110,9 +110,9 @@ module.exports = function (app, connection) {
       .then((pool) => {
         return pool
           .request()
-          .input("LogID", sql.Int, LogId)
-          .input("Client", tvpClient)
-          .input("status", tvpStatus)
+            .input("LogID", sql.Int, LogId)
+            .input("Client", tvpClient)
+            .input("status", tvpStatus)
           .input("emplist", tvpEmp)
 
           .input("date", sql.NVarChar(10), date)
