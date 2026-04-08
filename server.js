@@ -49,7 +49,7 @@ app.use(function (req, res, next) {
     "Access-Control-Allow-Methods",
     "GET, POST, OPTIONS, PUT, PATCH, DELETE",
   );
- 
+
   // Request headers you wish to allow
   res.setHeader(
     "Access-Control-Allow-Headers",
@@ -109,6 +109,7 @@ require("./service/users")(app, connection,upload);
 require("./service/work")(app, connection);
 require("./service/sales")(app, connection);
 require("./service/ads")(app, connection);
+require("./service/work-calendar")(app, connection);
  
  
  

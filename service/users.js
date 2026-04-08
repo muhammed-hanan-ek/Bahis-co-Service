@@ -13,7 +13,8 @@ module.exports = function (app, connection,upload) {
   app.post("/user/login", upload.none(), function (req, res) {
     var username = req.body.username;
     var password = req.body.password;
-
+    console.log(req.body,'req.body');
+    
     connection
       .then((pool) => {
         return pool

@@ -1,0 +1,105 @@
+module.exports = function (app, connection) {
+  // Get the packages we need //
+
+  var sql = require("mssql"); //adding mssql driver into this file.
+
+  var config = require("../config").config;
+  const multer = require("multer");
+  const upload = multer();
+  var jwt = require("jsonwebtoken"); // used to create, sign, and verify tokens
+  var configauth = require("../config");
+  app.set("superSecret", configauth.secret);
+  var excelbuilder = require("msexcel-builder-extended");
+  const PdfPrinter = require("pdfmake/src/printer");
+  const fs = require("fs");
+
+  const fonts = {
+    Roboto: {
+      normal: "./fonts/Roboto-Regular.ttf",
+      bold: "./fonts/Roboto-Medium.ttf",
+      italics: "./fonts/Roboto-Italic.ttf",
+      bolditalics: "./fonts/Roboto-Italic.ttf",
+    },
+  };
+
+  const printer = new PdfPrinter(fonts);
+
+      app.post("/work_calendar/load", upload.none(), function (req, res) {
+    if (req.body.slno != "null") {
+      var slno = req.body.slno;
+    } else {
+      var slno = null;
+    }
+
+    connection
+      .then((pool) => {
+        return pool
+          .request()
+          .input("slno", sql.Int, slno)
+          .input("mode", sql.Int, 1)
+
+          .execute("Proc_Work_calendar");
+      })
+      .then((result) => {
+        res.json({
+          result: "success",
+          data: result.recordsets,
+        });
+      })
+      .catch((err) => {
+        console.log("SQL Error:", err);
+
+        res.status(500).json({
+          result: "failed",
+          error: err.message,
+        });
+      });
+  });
+ 
+
+      app.post("/work_calendar/add", upload.none(), function (req, res) {
+
+        console.log(req.body);
+        
+    if (req.body.slno != "null") {
+      var slno = req.body.slno;
+    } else {
+      var slno = null;
+    }
+    var LogId = req.LogID
+    var title=req.body.title
+    var content=req.body.content
+    var date=req.body.date
+    var client=req.body.client
+
+    connection
+      .then((pool) => {
+        return pool
+          .request()
+          .input("slno", sql.Int, slno)
+          .input("mode", sql.Int, 2)
+          .input("LogID", sql.Int, LogId)
+          .input("title", sql.NVarChar(sql.MAX), title)
+          .input("content", sql.NVarChar(sql.MAX), content)
+          .input("client", sql.Int, client)
+          .input("date", sql.NVarChar(50), date)
+
+          .execute("Proc_Work_calendar");
+      })
+      .then((result) => {
+        res.json({
+          result: "success",
+          data: result.recordset,
+        });
+      })
+      .catch((err) => {
+        console.log("SQL Error:", err);
+
+        res.status(500).json({
+          result: "failed",
+          error: err.message,
+        });
+      });
+  });
+
+}
