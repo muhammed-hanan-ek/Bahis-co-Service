@@ -25,9 +25,8 @@ module.exports = function (app, connection) {
   const printer = new PdfPrinter(fonts);
 
   app.post("/work_calendar/load", upload.none(), function (req, res) {
+    console.log(req.body, "calendar open body");
 
-    console.log(req.body,'calendar open body');
-    
     if (req.body.slno != "null") {
       var slno = req.body.slno;
     } else {
@@ -138,6 +137,64 @@ module.exports = function (app, connection) {
         res.json({
           result: "success",
           data: result.recordsets,
+        });
+      })
+      .catch((err) => {
+        console.log("SQL Error:", err);
+
+        res.status(500).json({
+          result: "failed",
+          error: err.message,
+        });
+      });
+  });
+  app.post("/work_calendar/markAsComplete", upload.none(), function (req, res) {
+    var LogId = req.LogID;
+    var slno = req.body.slno;
+
+    connection
+      .then((pool) => {
+        return pool
+          .request()
+          .input("mode", sql.Int, 4)
+          .input("LogID", sql.Int, LogId)
+          .input("slno", sql.Int, slno)
+
+          .execute("Proc_Work_calendar");
+      })
+      .then((result) => {
+        res.json({
+          result: "success",
+          data: result.recordset,
+        });
+      })
+      .catch((err) => {
+        console.log("SQL Error:", err);
+
+        res.status(500).json({
+          result: "failed",
+          error: err.message,
+        });
+      });
+  });
+  app.post("/work_calendar/delete", upload.none(), function (req, res) {
+    var LogId = req.LogID;
+    var slno = req.body.slno;
+
+    connection
+      .then((pool) => {
+        return pool
+          .request()
+          .input("mode", sql.Int, 5)
+          .input("LogID", sql.Int, LogId)
+          .input("slno", sql.Int, slno)
+
+          .execute("Proc_Work_calendar");
+      })
+      .then((result) => {
+        res.json({
+          result: "success",
+          data: result.recordset,
         });
       })
       .catch((err) => {
