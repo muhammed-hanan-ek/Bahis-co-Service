@@ -12,11 +12,11 @@ module.exports = function (app, connection) {
 
   app.post("/sales/add", upload.none(), function (req, res) {
     var AD = req.body.AD;
-    var SLNO = (!req.body.SLNO || req.body.SLNO === 'null') ? null : req.body.SLNO;
+    var SLNO =
+      !req.body.SLNO || req.body.SLNO === "null" ? null : req.body.SLNO;
     var count = req.body.count;
     var amount = req.body.amount;
     var LOGID = req.LogID;
-    console.log(LOGID);
 
     connection
       .then((pool) => {
@@ -47,7 +47,7 @@ module.exports = function (app, connection) {
   });
 
   app.post("/sales/List", upload.none(), function (req, res) {
-    var slno=req.body.slno
+    var slno = req.body.slno;
 
     connection
       .then((pool) => {
@@ -74,9 +74,9 @@ module.exports = function (app, connection) {
   });
 
   app.post("/sales/Load", upload.none(), function (req, res) {
-    var SLNO = (!req.body.SLNO || req.body.SLNO === 'null') ? null : req.body.SLNO;
+    var SLNO =
+      !req.body.SLNO || req.body.SLNO === "null" ? null : req.body.SLNO;
     var LOGID = req.LogID;
-    console.log(LOGID);
 
     connection
       .then((pool) => {
@@ -103,32 +103,31 @@ module.exports = function (app, connection) {
       });
   });
 
-  app.post("/sales/Delete", upload.none(),function (req, res) {
+  app.post("/sales/Delete", upload.none(), function (req, res) {
     var SLNO = req.body.slno;
     connection
       .then((pool) => {
-        return pool
-          .request()
-          // .input("LogID", sql.Int, req.LogID)
-          .input("slno", sql.Int, SLNO)
-          .execute("deleteConvesrion");
+        return (
+          pool
+            .request()
+            // .input("LogID", sql.Int, req.LogID)
+            .input("slno", sql.Int, SLNO)
+            .execute("deleteConvesrion")
+        );
       })
       .then((result) => {
-        
-          res.json({
-            result: "success",
-            data: result.recordset,
-          });
-        
+        res.json({
+          result: "success",
+          data: result.recordset,
+        });
       })
       .catch((err) => {
         console.log("SQL Error:", err);
- 
+
         res.status(500).json({
           result: "failed",
           error: err.message,
         });
       });
   });
-
 };

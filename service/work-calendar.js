@@ -25,8 +25,6 @@ module.exports = function (app, connection) {
   const printer = new PdfPrinter(fonts);
 
   app.post("/work_calendar/load", upload.none(), function (req, res) {
-    console.log(req.body, "calendar open body");
-
     if (req.body.slno != "null") {
       var slno = req.body.slno;
     } else {

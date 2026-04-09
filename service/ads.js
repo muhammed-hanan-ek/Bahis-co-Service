@@ -10,7 +10,7 @@ module.exports = function (app, connection) {
   var configauth = require("../config");
   app.set("superSecret", configauth.secret);
 
-    app.post("/ad/load", upload.none(), function (req, res) {
+  app.post("/ad/load", upload.none(), function (req, res) {
     if (req.body.slno != "null") {
       var slno = req.body.slno;
     } else {
@@ -42,14 +42,15 @@ module.exports = function (app, connection) {
   });
 
   app.post("/ad/add", upload.none(), function (req, res) {
-    var slno = (!req.body.slno || req.body.slno === 'null') ? null : req.body.slno;
-    var ad=req.body.ad;
-    var startDate=req.body.startDate;
-    var endDate=req.body.endDate;
-    var amount=req.body.amount;
-    var client=req.body.client;
-    var link=req.body.link;
-    var LogId=req.LogID;
+    var slno =
+      !req.body.slno || req.body.slno === "null" ? null : req.body.slno;
+    var ad = req.body.ad;
+    var startDate = req.body.startDate;
+    var endDate = req.body.endDate;
+    var amount = req.body.amount;
+    var client = req.body.client;
+    var link = req.body.link;
+    var LogId = req.LogID;
 
     connection
       .then((pool) => {
@@ -63,12 +64,10 @@ module.exports = function (app, connection) {
           .input("client", sql.Int, client)
           .input("link", sql.NVarChar(sql.MAX), link)
           .input("LogId", sql.Int, LogId)
-          
+
           .execute("SP_SAVE_AD");
       })
       .then((result) => {
-        console.log(LogId,'log id for ad adding');
-        
         res.json({
           result: "success",
           data: result.recordset,
@@ -76,30 +75,27 @@ module.exports = function (app, connection) {
       })
       .catch((err) => {
         console.log("SQL Error:", err);
- 
+
         res.status(500).json({
           result: "failed",
           error: err.message,
         });
       });
-  })
+  });
 
-
-      app.post("/ad/List", upload.none(), function (req, res) {
+  app.post("/ad/List", upload.none(), function (req, res) {
     var LogId = req.LogID;
-   console.log(req.body);
-   
+
     var Client = JSON.parse(req.body?.Client);
     var date = req.body.date;
- 
+
     var tvpClient = new sql.Table();
-        tvpClient.columns.add("ID", sql.Int);
+    tvpClient.columns.add("ID", sql.Int);
 
     if (Array.isArray(Client)) {
-        Client.forEach(client => tvpClient.rows.add(client));
-      }
+      Client.forEach((client) => tvpClient.rows.add(client));
+    }
 
- 
     connection
       .then((pool) => {
         return pool
@@ -117,7 +113,7 @@ module.exports = function (app, connection) {
       })
       .catch((err) => {
         console.log("SQL Error:", err);
- 
+
         res.status(500).json({
           result: "failed",
           error: err.message,
@@ -125,31 +121,31 @@ module.exports = function (app, connection) {
       });
   });
 
-     app.post("/ad/Delete", upload.none(),function (req, res) {
+  app.post("/ad/Delete", upload.none(), function (req, res) {
     var SLNO = req.body.SLNO;
     connection
       .then((pool) => {
-        return pool
-          .request()
-          // .input("LogID", sql.Int, req.LogID)
-          .input("SLNO", sql.Int, SLNO)
-          .execute("DELETEAD");
+        return (
+          pool
+            .request()
+            // .input("LogID", sql.Int, req.LogID)
+            .input("SLNO", sql.Int, SLNO)
+            .execute("DELETEAD")
+        );
       })
       .then((result) => {
-        
-          res.json({
-            result: "success",
-            data: result.recordset,
-          });
-        
+        res.json({
+          result: "success",
+          data: result.recordset,
+        });
       })
       .catch((err) => {
         console.log("SQL Error:", err);
- 
+
         res.status(500).json({
           result: "failed",
           error: err.message,
         });
       });
   });
-}
+};

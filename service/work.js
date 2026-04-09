@@ -76,7 +76,6 @@ module.exports = function (app, connection) {
 
   app.post("/work/List", upload.none(), function (req, res) {
     var LogId = req.LogID;
-    console.log(req.body);
 
     var Client = JSON.parse(req.body?.Client);
     var Status = JSON.parse(req.body?.status);
@@ -110,9 +109,9 @@ module.exports = function (app, connection) {
       .then((pool) => {
         return pool
           .request()
-            .input("LogID", sql.Int, LogId)
-            .input("Client", tvpClient)
-            .input("status", tvpStatus)
+          .input("LogID", sql.Int, LogId)
+          .input("Client", tvpClient)
+          .input("status", tvpStatus)
           .input("emplist", tvpEmp)
 
           .input("date", sql.NVarChar(10), date)
@@ -195,7 +194,7 @@ module.exports = function (app, connection) {
   app.post("/work/ApproveOrReject", upload.none(), function (req, res) {
     var workId = req.body.workId;
     var DESICION = req.body.DESICION;
-    var remark=req.body.remark
+    var remark = req.body.remark;
     connection
       .then((pool) => {
         return pool
@@ -267,7 +266,6 @@ module.exports = function (app, connection) {
           .execute("PROCWorkList");
       })
       .then((result) => {
-        console.log(result.recordsets[0]);
         var works = result.recordsets[0];
 
         var workbook = excelbuilder.createWorkbook(
@@ -383,7 +381,6 @@ module.exports = function (app, connection) {
 
   app.post("/work/PDF", upload.none(), function (req, res) {
     var LogId = req.LogID;
-    console.log(req.body);
 
     var Client = JSON.parse(req.body?.Client);
     var Status = JSON.parse(req.body?.status);
@@ -578,14 +575,12 @@ module.exports = function (app, connection) {
             },
           },
         };
-        // console.log(dd)
 
         var pdfDoc = printer.createPdfKitDocument(dd);
         pdfDoc
           .pipe(fs.createWriteStream("uploads/PDF/works.pdf"))
           .on("finish", function () {
             //success
-            console.log("create the file");
             res.json({ result: "success", filename: "works.pdf" });
           });
         pdfDoc.end();
@@ -628,7 +623,6 @@ module.exports = function (app, connection) {
           .execute("PROCAdList");
       })
       .then((result) => {
-        console.log(result.recordsets[0]);
         var works = result.recordsets[0];
 
         var workbook = excelbuilder.createWorkbook(
@@ -759,7 +753,6 @@ module.exports = function (app, connection) {
 
   app.post("/ad/pdf", upload.none(), function (req, res) {
     var LogId = req.LogID;
-    console.log(req.body);
 
     var Client = JSON.parse(req.body?.Client);
     var date = req.body.date;
@@ -931,7 +924,6 @@ module.exports = function (app, connection) {
           .pipe(fs.createWriteStream("uploads/PDF/ads.pdf"))
           .on("finish", function () {
             //success
-            console.log("create the file");
             res.json({ result: "success", filename: "ads.pdf" });
           });
         pdfDoc.end();
