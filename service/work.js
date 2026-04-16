@@ -942,4 +942,382 @@ module.exports = function (app, connection) {
         });
       });
   });
+
+
+      app.post("/work_calendar/pdf", upload.none(), function (req, res) {
+    var LogId = req.LogID;
+    var Client = JSON.parse(req.body?.Client);
+    var Status = JSON.parse(req.body?.status);
+    var date = req.body.date;
+ 
+    var tvpClient = new sql.Table();
+    tvpClient.columns.add("ID", sql.Int);
+    var tvpStatus = new sql.Table();
+    tvpStatus.columns.add("ID", sql.Int);
+ 
+    if (Array.isArray(Client)) {
+      Client.forEach((client) => tvpClient.rows.add(client));
+    }
+ 
+    if (Array.isArray(Status)) {
+      Status.forEach((status) => {
+        tvpStatus.rows.add(status);
+      });
+    }
+ 
+    connection
+      .then((pool) => {
+        return pool
+          .request()
+          .input("mode", sql.Int, 3)
+          .input("LogID", sql.Int, LogId)
+          .input("clientFilter", tvpClient)
+          .input("statusFilter", tvpStatus)
+          .input("date", sql.NVarChar(50), date)
+ 
+          .execute("Proc_Work_calendar");
+      })
+      .then((result) => {
+        console.log(result.recordsets);
+        var data = result.recordsets[0];
+        var Header1 = [];
+ 
+        Header1.push({
+          text: "Work Title",
+          style: "tableHeader",
+          alignment: "center",
+        });
+        Header1.push({
+          text: "Client",
+          style: "tableHeader",
+          alignment: "center",
+        });
+        Header1.push({
+          text: "Content",
+          style: "tableHeader",
+          alignment: "center",
+        });
+        Header1.push({
+          text: "Date",
+          style: "tableHeader",
+          alignment: "center",
+        });
+         Header1.push({
+          text: "status",
+          style: "tableHeader",
+          alignment: "center",
+        });
+ 
+ 
+        var head = ["title", "client", "content", "date","status"];
+        var bodyData = [];
+        bodyData.push(Header1);
+        data.forEach(function (sourceRow) {
+          var dataRow = [];
+          head.forEach(function (key, index) {
+            var align = "center";
+            if (typeof sourceRow[key] == "number") {
+              sourceRow[key] = sourceRow[key].toFixed(2);
+              align = "right";
+            }
+            if(key=='date'){
+               sourceRow[key]= formatDate(sourceRow[key]);
+            }
+             
+            if (key != "$$hashKey") {
+              dataRow.push({
+                text: sourceRow[key].toString(),
+                style: "tableData",
+                alignment: align,
+                colSpan: 1,
+              });
+            }
+            // dataRow.push({ text: sourceRow[key].toString(), style: 'tableData', alignment: align, colSpan: 1 })
+          });
+          bodyData.push(dataRow);
+        });
+ 
+        var dd = {
+          pageSize: "A4",
+          pageOrientation: "landscape",
+          pageMargins: [10, 40, 40, 60],
+          footer: {
+            columns: [
+              {
+                text: "Powered By ",
+                style: "reportFooter",
+                alignment: "right",
+              },
+            ],
+          },
+          content: [
+            //   {
+            //     image: path.join(__dirname, '../uploads/company.jpg'),
+            //     fit: [150, 150],
+            //     alignment: 'left'
+            // },
+            // { text: recordsets[3][0].com_name, alignment: 'center' },
+            { text: "Work Calendar", style: "header", alignment: "center" },
+            // {
+            //     style: 'tableExample1',
+            //     width: ['auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto'],
+            //     // table: {
+            //     //     body: [
+            //     //         [
+            //     //             // { text: 'Pay Group: ' + criteria.Pay_Group, alignment: 'left', italics: true, color: 'gray', style: 'tableData1' },
+            //     //             // { text: 'Pay Period: ' + criteria.Pay_Period, alignment: 'left', italics: true, color: 'gray', style: 'tableData1' },
+            //     //             // { text: 'Printed On: ' + dateFormat(new Date(), 'dd-mmmm-yyyy'), alignment: 'left', italics: true, color: 'gray', style: 'tableData1' },
+            //     //             // { text: 'Printed By: ' + recordsets[0][0].USR_Name, alignment: 'left', italics: true, color: 'gray', style: 'tableData1' },
+            //     //             // { text: 'Project: ' + criteria.project, alignment: 'left', italics: true, color: 'gray', style: 'tableData1' },
+            //     //             // { text: 'Employee: ' + criteria.Employee, alignment: 'left', italics: true, color: 'gray', style: 'tableData1' },
+            //     //             // { text: 'Employer: ' + criteria.Employer, alignment: 'left', italics: true, color: 'gray', style: 'tableData1' },
+            //     //         ]
+            //     //     ]
+            //     // }
+            // },
+            {
+              style: "tableExample",
+              table: {
+                headerRows: 1,
+                widths: ["*", "*", "*", "*", "*"],
+ 
+                body: bodyData,
+              },
+            },
+          ],
+          styles: {
+            header: {
+              fontSize: 25,
+              bold: true,
+              margin: [0, 0, 0, 0],
+            },
+            subheader: {
+              fontSize: 16,
+              bold: true,
+              margin: [0, 0, 0, 0],
+            },
+            tableExample: {
+              margin: [0, 0, 0, 0],
+            },
+            tableExample1: {
+              fontSize: 20,
+              margin: [240, 5, 0, 15],
+            },
+            tableHeader: {
+              bold: true,
+              fontSize: 10,
+              color: "black",
+              margin: [0, 0, 0, 0],
+            },
+            tablesubHeader: {
+              bold: true,
+              fontSize: 8,
+              color: "black",
+            },
+            tableData: {
+              fontSize: 6,
+              color: "black",
+            },
+            tableData1: {
+              fontSize: 20,
+              color: "black",
+            },
+            reportFooter: {
+              bold: true,
+              fontSize: 6,
+              color: "grey",
+              margin: [0, 25, 15, 0],
+            },
+ 
+            searchCrit: {
+              fontSize: 10,
+              color: "black",
+            },
+          },
+        };
+ 
+        var pdfDoc = printer.createPdfKitDocument(dd);
+        pdfDoc
+          .pipe(fs.createWriteStream("uploads/PDF/works.pdf"))
+          .on("finish", function () {
+            //success
+            res.json({ result: "success", filename: "works.pdf" });
+          });
+        pdfDoc.end();
+ 
+        // res.json({
+        //   result: "success",
+        //   data: result.recordsets,
+        // });
+      })
+      .catch((err) => {
+        console.log("SQL Error:", err);
+ 
+        res.status(500).json({
+          result: "failed",
+          error: err.message,
+        });
+      });
+  });
+
+  function formatDate(date) {
+    var d = new Date(date),
+        month = '' + (d.getMonth() + 1),
+        day = '' + d.getDate(),
+        year = d.getFullYear();
+ 
+    if (month.length < 2)
+        month = '0' + month;
+    if (day.length < 2)
+        day = '0' + day;
+ 
+    return [year, month, day].join('-');
+}
+ 
+ 
+  app.post("/work_calendar/excel", upload.none(), function (req, res) {
+    var LogId = req.LogID;
+    var Client = JSON.parse(req.body?.Client);
+    var Status = JSON.parse(req.body?.status);
+    var date = req.body.date;
+ 
+    var tvpClient = new sql.Table();
+    tvpClient.columns.add("ID", sql.Int);
+    var tvpStatus = new sql.Table();
+    tvpStatus.columns.add("ID", sql.Int);
+ 
+    if (Array.isArray(Client)) {
+      Client.forEach((client) => tvpClient.rows.add(client));
+    }
+ 
+    if (Array.isArray(Status)) {
+      Status.forEach((status) => {
+        tvpStatus.rows.add(status);
+      });
+    }
+ 
+    connection
+      .then((pool) => {
+        return pool
+          .request()
+          .input("mode", sql.Int, 3)
+          .input("LogID", sql.Int, LogId)
+          .input("clientFilter", tvpClient)
+          .input("statusFilter", tvpStatus)
+          .input("date", sql.NVarChar(50), date)
+ 
+          .execute("Proc_Work_calendar");
+      })
+      .then((result) => {
+        var works = result.recordsets[0];
+ 
+        var workbook = excelbuilder.createWorkbook(
+          "./uploads/Excel/",
+          "workCalendar" + ".xlsx",
+        );
+        var sheet1 = workbook.createSheet("Sheet", 6, works.length + 1);
+        sheet1.set(1, 1, "Work Title");
+        sheet1.set(2, 1, "Client");
+        sheet1.set(3, 1, "Content");
+        sheet1.set(4, 1, "Date");
+        sheet1.set(5, 1, "Status");
+ 
+        sheet1.font(1, 1, { sz: "12", family: "3", bold: "true" });
+        sheet1.font(2, 1, { sz: "12", family: "3", bold: "true" });
+        sheet1.font(3, 1, { sz: "12", family: "3", bold: "true" });
+        sheet1.font(4, 1, { sz: "12", family: "3", bold: "true" });
+        sheet1.font(5, 1, { sz: "12", family: "3", bold: "true" });
+ 
+        sheet1.border(1, 1, {
+          left: "thin",
+          top: "thin",
+          right: "thin",
+          bottom: "thin",
+        });
+        sheet1.border(2, 1, {
+          left: "thin",
+          top: "thin",
+          right: "thin",
+          bottom: "thin",
+        });
+        sheet1.border(3, 1, {
+          left: "thin",
+          top: "thin",
+          right: "thin",
+          bottom: "thin",
+        });
+        sheet1.border(4, 1, {
+          left: "thin",
+          top: "thin",
+          right: "thin",
+          bottom: "thin",
+        });
+        sheet1.border(5, 1, {
+          left: "thin",
+          top: "thin",
+          right: "thin",
+          bottom: "thin",
+        });
+     
+ 
+        for (var j = 0; j < works.length; j++) {
+          sheet1.set(1, j + 2, works[j].title);
+          sheet1.set(2, j + 2, works[j].client);
+          sheet1.set(3, j + 2, works[j].content);
+          sheet1.set(4, j + 2, formatDate(works[j].date));
+          sheet1.set(5, j + 2, works[j].status);
+ 
+ 
+          sheet1.border(1, j + 2, {
+            left: "thin",
+            top: "thin",
+            right: "thin",
+            bottom: "thin",
+          });
+          sheet1.border(2, j + 2, {
+            left: "thin",
+            top: "thin",
+            right: "thin",
+            bottom: "thin",
+          });
+          sheet1.border(3, j + 2, {
+            left: "thin",
+            top: "thin",
+            right: "thin",
+            bottom: "thin",
+          });
+          sheet1.border(4, j + 2, {
+            left: "thin",
+            top: "thin",
+            right: "thin",
+            bottom: "thin",
+          });
+          sheet1.border(5, j + 2, {
+            left: "thin",
+            top: "thin",
+            right: "thin",
+            bottom: "thin",
+          });
+         
+        }
+ 
+        workbook.save(function (ok) {
+          if (ok == false) workbook.cancel();
+          else
+            //
+            res.json({ result: "success", filename: "workcalendar.xlsx" });
+        });
+ 
+   
+      })
+      .catch((err) => {
+        console.log("SQL Error:", err);
+ 
+        res.status(500).json({
+          result: "failed",
+          error: err.message,
+        });
+      });
+  });
+ 
 };
